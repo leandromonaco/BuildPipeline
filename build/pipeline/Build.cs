@@ -11,6 +11,7 @@ using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.GitVersion;
 using Nuke.Common.Tools.MSBuild;
 using Nuke.Common.Tools.NuGet;
+using Nuke.Common.Tools.Octopus;
 using Nuke.Common.Utilities.Collections;
 using static Nuke.Common.EnvironmentInfo;
 using static Nuke.Common.IO.FileSystemTasks;
@@ -99,9 +100,15 @@ class Build : NukeBuild
                                    .SetOutputDirectory(OutputDirectory)
                                    .SetVersion("1.0.0"));
 
-        NuGetTasks.NuGetPack(n => n.SetTargetPath(@$"{SourceDirectory}\CakeTest.WebApp.NetCore31\CakeTest.WebApp.NetCore31.nuspec")
-                                   .SetOutputDirectory(OutputDirectory)
-                                   .SetVersion("1.0.0"));
+        //NuGetTasks.NuGetPack(n => n.SetTargetPath(@$"{SourceDirectory}\CakeTest.WebApp.NetCore31\CakeTest.WebApp.NetCore31.nuspec")
+        //                           .SetOutputDirectory(OutputDirectory)
+        //                           .SetVersion("1.0.2"));
+
+        OctopusTasks.OctopusPack(o => o.SetBasePath(@$"{SourceDirectory}\CakeTest.WebApp.NetCore31\bin\Release\netcoreapp3.1")
+                                       .SetOutputFolder(OutputDirectory)
+                                       .SetId("CakeTest.WebApp.NetCore")
+                                       .SetVersion("2.0.0.0"));
+        //GitVersionTasks.GitVersion(g => g)
 
         //DotNetTasks.DotNetPack(n => n.SetProject(@$"{SourceDirectory}\CakeTest.WebApp.NetCore31\CakeTest.WebApp.NetCore31.csproj")
         //                          .SetOutputDirectory(OutputDirectory)
