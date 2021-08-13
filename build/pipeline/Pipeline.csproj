@@ -14,6 +14,11 @@
     <PackageDownload Include="NuGet.CommandLine" Version="[5.10.0]" />
     <PackageDownload Include="GitVersion.Tool" Version="[5.6.7]" />
     <PackageDownload Include="OctopusTools" Version="[7.4.3357]" />
+	<PackageDownload Include="nbgv" Version="[3.4.231]" />
+	<PackageReference Include="Nerdbank.GitVersioning" Version="3.4.231">
+	  <PrivateAssets>all</PrivateAssets>
+	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	</PackageReference>
     <PackageReference Include="Nuke.Common" Version="5.3.0" />
   </ItemGroup>
 
