@@ -43,7 +43,7 @@ class Build : NukeBuild
     //[GitVersion(Framework = "netcoreapp3.1")] readonly GitVersion GitVersion;
 
     AbsolutePath SourceDirectory => RootDirectory / "src";
-    AbsolutePath TestsDirectory => RootDirectory / "tests";
+    AbsolutePath TestsDirectory => RootDirectory / "test";
     AbsolutePath OutputDirectory => RootDirectory / "output";
 
     Target Clean => _ => _
@@ -62,21 +62,6 @@ class Build : NukeBuild
                 .SetProjectFile(Solution));
         });
 
-    //Target Compile => _ => _
-    //    .DependsOn(Restore)
-    //    .Executes(() =>
-    //    {
-    //        DotNetBuild(s => s
-    //            .SetProjectFile(Solution)
-    //            .SetConfiguration(Configuration)
-    //            //.SetAssemblyVersion(GitVersion.AssemblySemVer)
-    //            //.SetFileVersion(GitVersion.AssemblySemFileVer)
-    //            //.SetInformationalVersion(GitVersion.InformationalVersion)
-    //            .EnableNoRestore());
-    //    });
-
-    Dictionary<string, string> versions = new Dictionary<string, string>();
-
     Target Versioning => _ => _
     .DependsOn(Restore)
           .Executes(() =>
@@ -85,51 +70,13 @@ class Build : NukeBuild
               var projectFiles = SourceDirectory.GlobFiles("**/*.csproj");
               foreach (var projectFile in projectFiles)
               {
-                  //TODO: This component is throwing an exception. See Nuke GitHub project.
-                  var result = NerdbankGitVersioningTasks.NerdbankGitVersioningGetVersion(v => v.SetProcessWorkingDirectory(projectFile.Parent).SetProcessArgumentConfigurator(a => a.Add("-f json"))).Result;
-                  versions.Add(projectFile, result.SimpleVersion);
-                  //this process requires to install nbgv
-                  //dotnet tool install --tool-path . nbgv
-
-
-                  //using (Process p = new Process())
-                  //{
-                  //    // set start info
-                  //    p.StartInfo = new ProcessStartInfo("cmd.exe")
-                  //    {
-                  //        RedirectStandardInput = true,
-                  //        UseShellExecute = false,
-                  //        WorkingDirectory = projectFile.Parent
-                  //    };
-                  //    // event handlers for output & error
-                  //    p.OutputDataReceived += p_OutputDataReceived;
-                  //    //p.ErrorDataReceived += p_ErrorDataReceived;
-
-                  //    // start process
-                  //    p.Start();
-                  //    // send command to its input
-                  //    p.StandardInput.Write("nbgv get-version -v Version + p.StandardInput.NewLine);
-                  //    p.StandardInput.Write("nbgv set-version - p CakeTest.WebApp.NetFramework48.csproj 3.0.0" + p.StandardInput.NewLine); 
-                  //}
+                
+                  var version = NerdbankGitVersioningTasks.NerdbankGitVersioningGetVersion(v => v.SetProcessWorkingDirectory(projectFile.Parent).SetProcessArgumentConfigurator(a => a.Add("-f json"))).Result.Version;
+                  NerdbankGitVersioningTasks.NerdbankGitVersioningSetVersion(v => v.SetProject(projectFile)
+                                                                                   .SetVersion(version));
               }
 
           });
-
-    static void p_ErrorDataReceived(object sender, DataReceivedEventArgs e)
-    {
-        Process p = sender as Process;
-        if (p == null)
-            return;
-        //Console.WriteLine(e.Data);
-    }
-
-    static void p_OutputDataReceived(object sender, DataReceivedEventArgs e)
-    {
-        Process p = sender as Process;
-        if (p == null)
-            return;
-        Console.WriteLine(e.Data);
-    }
 
     Target Compile => _ => _
     .DependsOn(Versioning)
@@ -138,13 +85,6 @@ class Build : NukeBuild
         MSBuildTasks.MSBuild(s => s
             .SetTargetPath(Solution)
             .SetConfiguration(Configuration)
-            //.SetMaxCpuCount(Environment.ProcessorCount)
-            //.SetNodeReuse(IsLocalBuild)
-            //.SetProperty("DeployOnBuild", "true")
-            //.SetProperty("PublishProfile", Configuration.ToString())
-            //.SetProperty("Platform", "AnyCPU")
-            //.SetProperty("PublishUrl", publishDestination)
-            //.SetTargets("Build", "Publish")
             );
     });
 
@@ -156,29 +96,14 @@ class Build : NukeBuild
     {
         NuGetTasks.NuGetInstall();
         NuGetTasks.NuGetPack(n => n.SetTargetPath(@$"{SourceDirectory}\CakeTest.WebApp.NetFramework48\CakeTest.WebApp.NetFramework48.csproj")
-                                   .SetOutputDirectory(OutputDirectory)
-                                   .SetVersion(versions.GetValueOrDefault(@$"{SourceDirectory}\CakeTest.WebApp.NetFramework48\CakeTest.WebApp.NetFramework48.csproj")));
+                                   .SetOutputDirectory(OutputDirectory));
 
-        //NuGetTasks.NuGetPack(n => n.SetTargetPath(@$"{SourceDirectory}\CakeTest.WebApp.NetCore31\CakeTest.WebApp.NetCore31.nuspec")
-        //                           .SetOutputDirectory(OutputDirectory)
-        //                           .SetVersion("1.0.2"));
-
+       
         OctopusTasks.OctopusPack(o => o.SetBasePath(@$"{SourceDirectory}\CakeTest.WebApp.NetCore31\bin\Release\netcoreapp3.1")
                                        .SetOutputFolder(OutputDirectory)
-                                       .SetId("CakeTest.WebApp.NetCore")
-                                       .SetVersion(versions.GetValueOrDefault(@$"{SourceDirectory}\CakeTest.WebApp.NetCore31\CakeTest.WebApp.NetCore31.csproj")));
-        //GitVersionTasks.GitVersion(g => g)
-
-        //DotNetTasks.DotNetPack(n => n.SetProject(@$"{SourceDirectory}\CakeTest.WebApp.NetCore31\CakeTest.WebApp.NetCore31.csproj")
-        //                          .SetOutputDirectory(OutputDirectory)
-        //                          .SetVersion("1.0.0"));
-
-        //DotNetTasks.DotNetPublish(n => n.SetProject(@$"{SourceDirectory}\CakeTest.WebApp.NetCore31\CakeTest.WebApp.NetCore31.csproj")
-        //                                .SetPackageDirectory(@$"{OutputDirectory}\core"));
+                                       .SetId("CakeTest.WebApp.NetCore"));
+       
     });
-
-
-
 
     //Target Test => _ => _
     //.DependsOn(Compile)
