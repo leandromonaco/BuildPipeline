@@ -71,9 +71,9 @@ class Build : NukeBuild
               foreach (var projectFile in projectFiles)
               {
                 
-                  var version = NerdbankGitVersioningTasks.NerdbankGitVersioningGetVersion(v => v.SetProcessWorkingDirectory(projectFile.Parent).SetProcessArgumentConfigurator(a => a.Add("-f json"))).Result.Version;
+                  var versionResult = NerdbankGitVersioningTasks.NerdbankGitVersioningGetVersion(v => v.SetProcessWorkingDirectory(projectFile.Parent).SetProcessArgumentConfigurator(a => a.Add("-f json"))).Result;
                   NerdbankGitVersioningTasks.NerdbankGitVersioningSetVersion(v => v.SetProject(projectFile)
-                                                                                   .SetVersion(version));
+                                                                                   .SetVersion(versionResult.Version));
               }
 
           });
