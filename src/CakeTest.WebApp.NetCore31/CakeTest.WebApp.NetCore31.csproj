@@ -9,6 +9,9 @@
     <Content Update="appsettings.json" Pack="true">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Update="version.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 
