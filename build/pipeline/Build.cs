@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using Nuke.Common;
 using Nuke.Common.CI;
@@ -62,6 +63,8 @@ class Build : NukeBuild
                 .SetProjectFile(Solution));
         });
 
+    Dictionary<string, string> versions = new Dictionary<string, string>();
+
     Target Versioning => _ => _
     .DependsOn(Restore)
           .Executes(() =>
@@ -70,10 +73,11 @@ class Build : NukeBuild
               var projectFiles = SourceDirectory.GlobFiles("**/*.csproj");
               foreach (var projectFile in projectFiles)
               {
-                
+                  FileInfo fileInfo = new FileInfo(projectFile);
                   var versionResult = NerdbankGitVersioningTasks.NerdbankGitVersioningGetVersion(v => v.SetProcessWorkingDirectory(projectFile.Parent).SetProcessArgumentConfigurator(a => a.Add("-f json"))).Result;
                   NerdbankGitVersioningTasks.NerdbankGitVersioningSetVersion(v => v.SetProject(projectFile)
                                                                                    .SetVersion(versionResult.Version));
+                  versions.Add(fileInfo.Name, versionResult.Version);
               }
 
           });
@@ -94,15 +98,36 @@ class Build : NukeBuild
     .DependsOn(Compile)
     .Executes(() =>
     {
-        NuGetTasks.NuGetInstall();
-        NuGetTasks.NuGetPack(n => n.SetTargetPath(@$"{SourceDirectory}\CakeTest.WebApp.NetFramework48\CakeTest.WebApp.NetFramework48.csproj")
-                                   .SetOutputDirectory(OutputDirectory));
+        var projectFiles = SourceDirectory.GlobFiles("**/*.csproj");
+        foreach (var projectFile in projectFiles)
+        {
+            FileInfo fileInfo = new FileInfo(projectFile);
+            var packageId = fileInfo.Name.Replace(".csproj", string.Empty);
 
+            var sourcePath = $"{projectFile.Parent}\\bin";
+            var targetPath = $"{OutputDirectory}\\{packageId}";
+
+            var directories = Directory.GetDirectories(sourcePath, "*net*", SearchOption.AllDirectories);
+
+            //if it's a .NET Core Project, override source path
+            if (directories.Length > 0)
+            {
+                sourcePath = directories[directories.Length-1];
+            }
+
+            CopyDirectoryRecursively(sourcePath, targetPath);
+                      
+
+            OctopusTasks.OctopusPack(o => o.SetBasePath(targetPath)
+                                           .SetOutputFolder(OutputDirectory)
+                                           .SetId(packageId)
+                                           .SetVersion(versions.GetValueOrDefault(fileInfo.Name)));
+
+            DeleteDirectory(targetPath);
+
+        }
        
-        OctopusTasks.OctopusPack(o => o.SetBasePath(@$"{SourceDirectory}\CakeTest.WebApp.NetCore31\bin\Release\netcoreapp3.1")
-                                       .SetOutputFolder(OutputDirectory)
-                                       .SetId("CakeTest.WebApp.NetCore"));
-       
+
     });
 
     //Target Test => _ => _
