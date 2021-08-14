@@ -1,4 +1,4 @@
 {
   "$schema": "./build.schema.json",
-  "Solution": "./NukeTest.sln"
+  "Solution": "./NukeBuildPipeline.sln"
 }

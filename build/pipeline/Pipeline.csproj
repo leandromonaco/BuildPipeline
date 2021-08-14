@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -17,5 +17,6 @@
 	<PackageDownload Include="nbgv" Version="[3.4.231]" />
     <PackageReference Include="Nuke.Common" Version="5.3.0" />
   </ItemGroup>
+
 
 </Project>

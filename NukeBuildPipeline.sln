@@ -3,11 +3,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31409.214
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CakeTest.WebApp.NetCore31", "src\CakeTest.WebApp.NetCore31\CakeTest.WebApp.NetCore31.csproj", "{D82B2FFD-9455-4A1F-BA24-5A5EBE39F477}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuildPipelineTest.WebApp.NetCore31", "src\CakeTest.WebApp.NetCore31\BuildPipelineTest.WebApp.NetCore31.csproj", "{D82B2FFD-9455-4A1F-BA24-5A5EBE39F477}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F49084C6-38D9-46A0-A562-279072895D79}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CakeTest.WebApp.NetFramework48", "src\CakeTest.WebApp.NetFramework48\CakeTest.WebApp.NetFramework48.csproj", "{F1C06D3F-68CA-4C94-BCE1-FA590725C17B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildPipelineTest.WebApp.NetFramework48", "src\CakeTest.WebApp.NetFramework48\BuildPipelineTest.WebApp.NetFramework48.csproj", "{F1C06D3F-68CA-4C94-BCE1-FA590725C17B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{25B2E76B-E7A9-439E-9BC7-7B7B8EB1AD4A}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

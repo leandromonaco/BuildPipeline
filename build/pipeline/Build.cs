@@ -92,8 +92,6 @@ class Build : NukeBuild
             );
     });
 
-
-
     Target Pack => _ => _
     .DependsOn(Compile)
     .Executes(() =>
@@ -107,9 +105,8 @@ class Build : NukeBuild
             var sourcePath = $"{projectFile.Parent}\\bin";
             var targetPath = $"{OutputDirectory}\\{packageId}";
 
-            var directories = Directory.GetDirectories(sourcePath, "*net*", SearchOption.AllDirectories);
-
             //if it's a .NET Core Project, override source path
+            var directories = Directory.GetDirectories(sourcePath, "*net*", SearchOption.AllDirectories);
             if (directories.Length > 0)
             {
                 sourcePath = directories[directories.Length-1];
