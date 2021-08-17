@@ -43,9 +43,10 @@ class Build : NukeBuild
     //[GitRepository] readonly GitRepository GitRepository;
     //[GitVersion(Framework = "netcoreapp3.1")] readonly GitVersion GitVersion;
 
-    AbsolutePath SourceDirectory => RootDirectory / "src";
-    AbsolutePath TestsDirectory => RootDirectory / "test";
-    AbsolutePath OutputDirectory => RootDirectory / "output";
+    AbsolutePath SolutionDirectory => RootDirectory.Parent;
+    AbsolutePath SourceDirectory => SolutionDirectory / "src";
+    AbsolutePath TestsDirectory => SolutionDirectory / "test";
+    AbsolutePath OutputDirectory => SolutionDirectory / "output";
 
     Target Clean => _ => _
         .Executes(() =>
@@ -60,7 +61,7 @@ class Build : NukeBuild
         .Executes(() =>
         {
             NuGetTasks.NuGetRestore(s => s
-                .SetSolutionDirectory(Solution.Directory));
+                .SetSolutionDirectory(SolutionDirectory));
         });
 
     Dictionary<string, string> versions = new Dictionary<string, string>();
@@ -87,7 +88,7 @@ class Build : NukeBuild
     .Executes(() =>
     {
         MSBuildTasks.MSBuild(s => s
-            .SetTargetPath(Solution)
+            .SetTargetPath(SolutionDirectory)
             .SetConfiguration(Configuration)
             );
     });

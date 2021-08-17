@@ -1,0 +1,1 @@
+Run .\build\build.ps1 --root build
