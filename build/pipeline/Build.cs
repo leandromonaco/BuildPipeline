@@ -61,7 +61,7 @@ class Build : NukeBuild
         .Executes(() =>
         {
             NuGetTasks.NuGetRestore(s => s
-                .SetSolutionDirectory(SolutionDirectory));
+                .SetTargetPath(SolutionDirectory));
         });
 
     Dictionary<string, string> versions = new Dictionary<string, string>();

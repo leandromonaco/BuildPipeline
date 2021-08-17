@@ -5,19 +5,6 @@ VisualStudioVersion = 16.0.31605.320
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pipeline", "pipeline\Pipeline.csproj", "{8CF29A37-BFDC-4258-9DCC-B9C7EA15D2FF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nuke", "Nuke", "{5E04DF4D-D382-41BC-8FC2-85FEB9EE9E32}"
-	ProjectSection(SolutionItems) = preProject
-		build.cmd = build.cmd
-		build.ps1 = build.ps1
-		build.sh = build.sh
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Configuration", "Configuration", "{E1D45FAC-9E3F-4C64-9924-5DB702D6B084}"
-	ProjectSection(SolutionItems) = preProject
-		..\.nuke\build.schema.json = ..\.nuke\build.schema.json
-		..\.nuke\parameters.json = ..\.nuke\parameters.json
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,9 +18,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{E1D45FAC-9E3F-4C64-9924-5DB702D6B084} = {5E04DF4D-D382-41BC-8FC2-85FEB9EE9E32}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4798EAE1-2496-446B-B71B-6A5E69C5C3BA}
