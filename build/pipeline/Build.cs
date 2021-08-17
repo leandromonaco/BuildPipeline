@@ -59,8 +59,8 @@ class Build : NukeBuild
         .DependsOn(Clean)
         .Executes(() =>
         {
-            DotNetRestore(s => s
-                .SetProjectFile(Solution));
+            NuGetTasks.NuGetRestore(s => s
+                .SetSolutionDirectory(Solution.Directory));
         });
 
     Dictionary<string, string> versions = new Dictionary<string, string>();
