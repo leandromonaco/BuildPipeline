@@ -45,14 +45,16 @@ class Build : NukeBuild
 
     AbsolutePath SolutionDirectory => RootDirectory.Parent;
     AbsolutePath SourceDirectory => SolutionDirectory / "src";
-    AbsolutePath TestsDirectory => SolutionDirectory / "test";
+    AbsolutePath TestDirectory => SolutionDirectory / "test";
+    AbsolutePath ToolDirectory => SolutionDirectory / "tools";
     AbsolutePath OutputDirectory => SolutionDirectory / "output";
 
     Target Clean => _ => _
         .Executes(() =>
         {
             SourceDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
-            TestsDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
+            TestDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
+            ToolDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
             EnsureCleanDirectory(OutputDirectory);
         });
 
@@ -71,12 +73,12 @@ class Build : NukeBuild
           .Executes(() =>
           {
 
-              var projectFiles = SourceDirectory.GlobFiles("**/*.csproj");
+              var projectFiles = SolutionDirectory.GlobFiles("**/*.csproj");
               foreach (var projectFile in projectFiles)
               {
                   FileInfo fileInfo = new FileInfo(projectFile);
                   var versionResult = NerdbankGitVersioningTasks.NerdbankGitVersioningGetVersion(v => v.SetProcessWorkingDirectory(projectFile.Parent).SetProcessArgumentConfigurator(a => a.Add("-f json"))).Result;
-                  NerdbankGitVersioningTasks.NerdbankGitVersioningSetVersion(v => v.SetProject(projectFile)
+                  NerdbankGitVersioningTasks.NerdbankGitVersioningSetVersion(v => v.SetProject(projectFile.Parent)
                                                                                    .SetVersion(versionResult.Version));
                   versions.Add(fileInfo.Name, versionResult.Version);
               }
@@ -97,52 +99,41 @@ class Build : NukeBuild
     .DependsOn(Compile)
     .Executes(() =>
     {
-        var projectFiles = SourceDirectory.GlobFiles("**/*.csproj");
+        var projectFiles = SolutionDirectory.GlobFiles("**/*.csproj");
         foreach (var projectFile in projectFiles)
         {
-            FileInfo fileInfo = new FileInfo(projectFile);
-            var packageId = fileInfo.Name.Replace(".csproj", string.Empty);
-
-            var sourcePath = $"{projectFile.Parent}\\bin";
-            var targetPath = $"{OutputDirectory}\\{packageId}";
-
-            //if it's a .NET Core Project, override source path
-            var directories = Directory.GetDirectories(sourcePath, "*net*", SearchOption.AllDirectories);
-            if (directories.Length > 0)
+            //deploy.me should only exist for deployable components
+            if (projectFile.Parent.GlobFiles("deploy.me").Count > 0)
             {
-                sourcePath = directories[directories.Length-1];
+                FileInfo fileInfo = new FileInfo(projectFile);
+                var packageId = fileInfo.Name.Replace(".csproj", string.Empty);
+
+                var sourcePath = $"{projectFile.Parent}\\bin";
+                var targetPath = $"{OutputDirectory}\\{packageId}";
+
+                //if it's a .NET Core Project, override source path
+                var directories = new List<string>();
+                var netCoreDirectories = Directory.GetDirectories(sourcePath, "*net*", SearchOption.AllDirectories).ToArray();
+                var netFrameworkDirectories = Directory.GetDirectories(sourcePath, "*release*", SearchOption.AllDirectories).ToArray();
+                directories.AddRange(netCoreDirectories);
+                directories.AddRange(netFrameworkDirectories);
+                if (directories.Count > 0)
+                {
+                    sourcePath = directories.FirstOrDefault();
+                }
+
+                CopyDirectoryRecursively(sourcePath, targetPath);
+
+                OctopusTasks.OctopusPack(o => o.SetBasePath(targetPath)
+                                               .SetOutputFolder(OutputDirectory)
+                                               .SetId(packageId)
+                                               .SetVersion(versions.GetValueOrDefault(fileInfo.Name)));
+
+                DeleteDirectory(targetPath);
             }
 
-            CopyDirectoryRecursively(sourcePath, targetPath);
-                      
-
-            OctopusTasks.OctopusPack(o => o.SetBasePath(targetPath)
-                                           .SetOutputFolder(OutputDirectory)
-                                           .SetId(packageId)
-                                           .SetVersion(versions.GetValueOrDefault(fileInfo.Name)));
-
-            DeleteDirectory(targetPath);
-
         }
-       
+
 
     });
-
-    //Target Test => _ => _
-    //.DependsOn(Compile)
-    //.Executes(() =>
-    //{
-    //    DotNetTest(s => s
-    //        .SetProjectFile(Solution)
-    //        .SetConfiguration(Configuration)
-    //        .EnableNoRestore()
-    //        .EnableNoBuild());
-    //});
-
-    //Target Pack => _ => _
-    //    .DependsOn(Compile)
-    //    .Executes(() =>
-    //    {
-    //        MSBuildTasks.p
-    //    });
 }
