@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using Nuke.Common;
 using Nuke.Common.CI;
 using Nuke.Common.Execution;
@@ -62,8 +63,7 @@ class Build : NukeBuild
         .DependsOn(Clean)
         .Executes(() =>
         {
-            NuGetTasks.NuGetRestore(s => s
-                .SetTargetPath(SolutionDirectory));
+            NuGetTasks.NuGetRestore(s => s.SetTargetPath(SolutionDirectory));
         });
 
     Dictionary<string, string> versions = new Dictionary<string, string>();
@@ -79,7 +79,8 @@ class Build : NukeBuild
                   FileInfo fileInfo = new FileInfo(projectFile);
                   var versionResult = NerdbankGitVersioningTasks.NerdbankGitVersioningGetVersion(v => v.SetProcessWorkingDirectory(projectFile.Parent).SetProcessArgumentConfigurator(a => a.Add("-f json"))).Result;
                   NerdbankGitVersioningTasks.NerdbankGitVersioningSetVersion(v => v.SetProject(projectFile.Parent)
-                                                                                   .SetVersion(versionResult.Version));
+                                                                                   .SetVersion(versionResult.Version)
+                                                                                   );
                   versions.Add(fileInfo.Name, versionResult.Version);
               }
 
@@ -99,15 +100,23 @@ class Build : NukeBuild
     .DependsOn(Compile)
     .Executes(() =>
     {
+        DeploymentList deploymentList;
+
+        using (StreamReader r = new StreamReader($"{Directory.GetCurrentDirectory()}\\Deployment\\deployment_list.json"))
+        {
+            string json = r.ReadToEnd();
+            deploymentList = JsonSerializer.Deserialize<DeploymentList>(json);
+        }
+
         var projectFiles = SolutionDirectory.GlobFiles("**/*.csproj");
         foreach (var projectFile in projectFiles)
         {
-            //deploy.me should only exist for deployable components
-            if (projectFile.Parent.GlobFiles("deploy.me").Count > 0)
-            {
-                FileInfo fileInfo = new FileInfo(projectFile);
-                var packageId = fileInfo.Name.Replace(".csproj", string.Empty);
+            FileInfo fileInfo = new FileInfo(projectFile);
 
+            //Check in deployment list to see if the project is deployable
+            if (deploymentList?.Applications.Count(a => a.Equals(fileInfo.Name)) > 0)
+            {
+                var packageId = fileInfo.Name.Replace(".csproj", string.Empty);
                 var sourcePath = $"{projectFile.Parent}\\bin";
                 var targetPath = $"{OutputDirectory}\\{packageId}";
 

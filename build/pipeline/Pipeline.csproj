@@ -18,5 +18,11 @@
     <PackageReference Include="Nuke.Common" Version="5.3.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Deployment\deployment_list.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 
 </Project>
