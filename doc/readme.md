@@ -1,1 +1,1 @@
-Run .\build\build.ps1 --root build
+Run .\monorepo\myapp\build\build.ps1 --root myapp/build -OctopusServerUrl https://octopusurl -OctopusApiKey somekey -OctopusSpaceId Spaces-1

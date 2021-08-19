@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using Nuke.Common;
 using Nuke.Common.CI;
@@ -28,22 +29,18 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 [ShutdownDotNetAfterServerBuild]
 class Build : NukeBuild
 {
-    /// Support plugins are available for:
-    ///   - JetBrains ReSharper        https://nuke.build/resharper
-    ///   - JetBrains Rider            https://nuke.build/rider
-    ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
-    ///   - Microsoft VSCode           https://nuke.build/vscode
 
-    public static int Main() => Execute<Build>(x => x.Pack);
+    public static int Main() => Execute<Build>(x => x.Push);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     //readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
     readonly Configuration Configuration = Configuration.Release;
 
-    [Solution] readonly Solution Solution;
-    //[GitRepository] readonly GitRepository GitRepository;
-    //[GitVersion(Framework = "netcoreapp3.1")] readonly GitVersion GitVersion;
+    [Parameter] string OctopusServerUrl;
+    [Parameter] string OctopusApiKey;
+    [Parameter] string OctopusSpaceId;
 
+    [Solution] readonly Solution Solution;
     AbsolutePath SolutionDirectory => RootDirectory.Parent;
     AbsolutePath SourceDirectory => SolutionDirectory / "src";
     AbsolutePath TestDirectory => SolutionDirectory / "test";
@@ -102,7 +99,8 @@ class Build : NukeBuild
     {
         DeploymentList deploymentList;
 
-        using (StreamReader r = new StreamReader($"{Directory.GetCurrentDirectory()}\\Deployment\\deployment_list.json"))
+        FileInfo buildAssembly = new FileInfo(Assembly.GetExecutingAssembly().Location);
+        using (StreamReader r = new StreamReader($"{buildAssembly.Directory}\\Deployment\\deployment_list.json"))
         {
             string json = r.ReadToEnd();
             deploymentList = JsonSerializer.Deserialize<DeploymentList>(json);
@@ -140,9 +138,26 @@ class Build : NukeBuild
 
                 DeleteDirectory(targetPath);
             }
-
         }
 
 
+
+
     });
+
+    Target Push => _ => _
+              .DependsOn(Pack)
+              .Executes(() =>
+              {
+                  var packages = SolutionDirectory.GlobFiles("**/output/*.nupkg");
+                  foreach (var package in packages)
+                  {
+                      //if the package exists the default behaviour is to reject the package
+                      OctopusTasks.OctopusPush(o => o.SetServer(OctopusServerUrl)
+                                                     .SetApiKey(OctopusApiKey)
+                                                     .SetSpace(OctopusSpaceId)
+                                                     .SetPackage(package));
+                  }
+
+              });
 }
